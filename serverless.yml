@@ -1,0 +1,24 @@
+service: food-delivery-app
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  deploymentBucket:
+    name: kandoi 
+  region: ap-south-1  
+  environment:
+    DB_URI: ${env:DB_URI}
+    PORT: ${env:PORT}
+
+functions:
+  api:
+    handler: handler.api
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+      - http:
+          path: /dev
+          method: any
+
+
