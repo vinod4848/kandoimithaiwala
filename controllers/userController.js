@@ -83,9 +83,9 @@ const verifyOtp = async (req, res) => {
   try {
     const { phoneNumber, otp } = req.body;
     const normalizedPhoneNumber = phoneNumber.trim();
-    console.log("Received OTP:", otp);
-    console.log("Stored OTP:", otps[normalizedPhoneNumber]?.otp);
-    console.log("Stored Data:", otps[normalizedPhoneNumber]);
+    // console.log("Received OTP:", otp);
+    // console.log("Stored OTP:", otps[normalizedPhoneNumber]?.otp);
+    // console.log("Stored Data:", otps[normalizedPhoneNumber]);
 
     // Verify the OTP
     if (otps[normalizedPhoneNumber] && otps[normalizedPhoneNumber].otp === otp.trim()) {
