@@ -36,7 +36,7 @@ const registerUser = async (req, res) => {
     otps[normalizedPhoneNumber] = { otp, username };
     console.log("Stored OTP:", otps[normalizedPhoneNumber]);
 
-    res.status(200).json({ message: "OTP sent successfully. Please verify." });
+    res.status(200).json({ message: "OTP sent successfully. Please verify." ,otp});
   } catch (err) {
     console.error("Error during user registration:", err);
     res.status(500).json({ message: "Failed to register user" });
