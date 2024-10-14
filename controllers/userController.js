@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const { uploadImage } = require("../helper/uploadImage");
 
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -126,28 +127,60 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// const updateUser = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = req.body;
+
+//     console.log(`Updating user with ID: ${id}`);
+
+//     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+//       new: true,
+//       runValidators: true,
+//     });
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+//     const image = await uploadImage(file);
+//     const user = new User({ ...req.body, image });
+//     res.status(200).json({
+//       message: "User updated successfully",
+//       updatedUser,
+//     });
+//   } catch (err) {
+//     console.error("Error updating user:", err);
+//     res.status(500).json({ message: "Failed to update user" });
+//   }
+// };
+
 const updateUser = async (req, res) => {
   try {
-    const userId = req.params.id;
-    const updates = req.body;
+    const { id } = req.params;
+    const updateData = req.body;
 
-    if (updates.password) {
-      updates.password = await bcrypt.hash(updates.password, 10);
+    console.log(`Updating user with ID: ${id}`);
+    let imageUrl;
+    if (req.file) {
+      imageUrl = await uploadImage(req.file);
+
+      updateData.image = imageUrl;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, updates, {
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
       new: true,
+      runValidators: true,
     });
-
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res
-      .status(200)
-      .json({ message: "User updated successfully", user: updatedUser });
-  } catch (error) {
-    console.error("Error updating user:", error);
+    res.status(200).json({
+      message: "User updated successfully",
+      updatedUser,
+    });
+  } catch (err) {
+    console.error("Error updating user:", err);
     res.status(500).json({ message: "Failed to update user" });
   }
 };
