@@ -153,11 +153,11 @@ const getCart = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Populate the items array to include product information (e.g., price)
+
     const cart = await Cart.findOne({ userId }).populate({
       path: 'items.productId',
       model: 'Product',
-      select: 'price name', // Ensure price is included in the population
+      select: 'price name image', 
     });
 
     if (!cart) {
@@ -169,7 +169,7 @@ const getCart = async (req, res) => {
     cart.items = cart.items.map((item) => {
       if (item.productId && item.productId.price !== undefined) {
         const itemTotalPrice = item.productId.price * item.quantity;
-        item.totalPrice = itemTotalPrice; // Update the item with the correct total price
+        item.totalPrice = itemTotalPrice; 
         totalPrice += itemTotalPrice;
       } else {
         console.warn(`Product ID: ${item.productId} does not have a valid price.`);
@@ -177,13 +177,11 @@ const getCart = async (req, res) => {
       return item;
     });
 
-    // Save the updated cart if any item's `totalPrice` has been modified
-    await cart.save();
 
-    // Respond with cart and total price
+    await cart.save();
     res.status(200).json({
       cart,
-      totalPrice, // This is the calculated total price
+      totalPrice, 
     });
   } catch (error) {
     console.error("Error fetching cart:", error);
