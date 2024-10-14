@@ -2,15 +2,15 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const { uploadImage } = require("../helper/uploadImage");
-
 const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-const otps = {};
+const otps = {}; // Store OTPs
 
 const sendOtp = async (phoneNumber, otp) => {
   console.log(`Sending OTP ${otp} to ${phoneNumber}`);
+  // You can integrate your SMS service here
 };
 
 const registerUser = async (req, res) => {
@@ -31,40 +31,81 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ message: "Username is already taken" });
       }
     }
+
     const otp = generateOtp();
     await sendOtp(normalizedPhoneNumber, otp);
-    otps[normalizedPhoneNumber] = { otp, username };
+    otps[normalizedPhoneNumber] = { otp, username }; // Store OTP and username
     console.log("Stored OTP:", otps[normalizedPhoneNumber]);
 
-    res.status(200).json({ message: "OTP sent successfully. Please verify." ,otp});
+    res.status(200).json({ message: "OTP sent successfully. Please verify.", otp });
   } catch (err) {
     console.error("Error during user registration:", err);
     res.status(500).json({ message: "Failed to register user" });
   }
 };
 
+// const verifyOtp = async (req, res) => {
+//   try {
+//     const { phoneNumber, otp } = req.body;
+//     const normalizedPhoneNumber = phoneNumber.trim();
+//     console.log("Received OTP:", otp);
+//     console.log("Stored OTP:", otps[normalizedPhoneNumber]?.otp);
+//     console.log("Stored Data:", otps[normalizedPhoneNumber]);
+
+//     // Verify the OTP
+//     if (otps[normalizedPhoneNumber] && otps[normalizedPhoneNumber].otp === otp.trim()) {
+//       const username = otps[normalizedPhoneNumber].username;
+
+//       // Check if the user already exists (for registration)
+//       const existingUser = await User.findOne({ phoneNumber: normalizedPhoneNumber });
+//       if (!existingUser) {
+//         // If user doesn't exist, create a new one
+//         const newUser = new User({
+//           phoneNumber: normalizedPhoneNumber,
+//           username,
+//         });
+//         await newUser.save();
+//       }
+
+//       // Remove the OTP after successful verification
+//       delete otps[normalizedPhoneNumber];
+
+//       return res.status(200).json({ message: "OTP verified successfully" ,newUser});
+//     } else {
+//       return res.status(400).json({ message: "Invalid OTP" });
+//     }
+//   } catch (err) {
+//     console.error("Error during OTP verification:", err);
+//     res.status(500).json({ message: "Failed to verify OTP" });
+//   }
+// };
 const verifyOtp = async (req, res) => {
   try {
     const { phoneNumber, otp } = req.body;
-
     const normalizedPhoneNumber = phoneNumber.trim();
     console.log("Received OTP:", otp);
     console.log("Stored OTP:", otps[normalizedPhoneNumber]?.otp);
     console.log("Stored Data:", otps[normalizedPhoneNumber]);
-    if (
-      otps[normalizedPhoneNumber] &&
-      otps[normalizedPhoneNumber].otp === otp.trim()
-    ) {
+
+    // Verify the OTP
+    if (otps[normalizedPhoneNumber] && otps[normalizedPhoneNumber].otp === otp.trim()) {
       const username = otps[normalizedPhoneNumber].username;
-      const newUser = new User({
-        phoneNumber: normalizedPhoneNumber,
-        username,
-      });
-      await newUser.save();
+
+      // Check if the user already exists (for registration)
+      let existingUser = await User.findOne({ phoneNumber: normalizedPhoneNumber });
+      if (!existingUser) {
+        // If user doesn't exist, create a new one
+        existingUser = new User({
+          phoneNumber: normalizedPhoneNumber,
+          username,
+        });
+        await existingUser.save();
+      }
+
+      // Remove the OTP after successful verification
       delete otps[normalizedPhoneNumber];
-      return res
-        .status(201)
-        .json({ message: "OTP verified successfully", newUser });
+
+      return res.status(200).json({ message: "OTP verified successfully", user: existingUser });
     } else {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -88,11 +129,9 @@ const loginUser = async (req, res) => {
     // Generate a new OTP
     const otp = generateOtp();
     await sendOtp(phoneNumber, otp);
-    otps[phoneNumber] = otp; // Store the new OTP
+    otps[phoneNumber] = { otp }; // Store OTP as an object for consistency
 
-    res
-      .status(200)
-      .json({ message: "OTP sent successfully. Please verify.", otp });
+    res.status(200).json({ message: "OTP sent successfully. Please verify.",otp });
   } catch (err) {
     console.error("Error during OTP login:", err);
     res.status(500).json({ message: "Failed to initiate OTP login" });
