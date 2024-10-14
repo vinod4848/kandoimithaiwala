@@ -1,114 +1,9 @@
 const Order = require("../models/Order");
-const Product = require("../models/Product");
-const DeliveryBoy = require("../models/DeliveryBoy");
+const DeliveryBoy = require("../models/DeliveryBoy"); 
 
-
-// const createOrder = async (req, res) => {
-//   try {
-//     const {
-//       userId,
-//       addressId,
-//       cartItems,
-//       name,
-//       email,
-//       phone,
-//       paymentMode  
-//     } = req.body;
-
-
-//     const products = await Product.find({
-//       _id: { $in: cartItems.map((item) => item.productIds) },
-//     });
-
-    
-//     let totalPrice = cartItems.reduce((acc, item) => {
-//       const product = products.find(
-//         (p) => p._id.toString() === item.productIds
-//       );
-//       if (product) {
-//         return acc + product.price * item.quantity;
-//       }
-//       return acc;
-//     }, 0);
-
-//     const gstAmount = (18 / 100) * totalPrice;
-//     const deliveryCharge = 50;
-//     totalPrice += gstAmount + deliveryCharge;
-
-//     const order = new Order({
-//       userId,
-//       addressId,
-//       cartItems,
-//       totalPrice,
-//       name,
-//       email,
-//       phone,
-//       paymentMode,  
-//       status: 'Processing',
-//     });
-//     await order.save();
-//     res.status(201).json({
-//       message: 'Order placed successfully!',
-//       totalPrice: totalPrice,
-//       gstAmount: gstAmount,
-//       deliveryCharge: deliveryCharge,
-//       orderId: order._id
-//     });
-//   } catch (error) {
-//     console.error('Error during checkout:', error);
-//     res.status(500).json({ message: 'Failed to place the order.' });
-//   }
-// };
 const createOrder = async (req, res) => {
   try {
     const {
-      userId,
-      addressId,
-      cartItems,
-      name,
-      email,
-      phone,
-      paymentMode  
-    } = req.body;
-
-    const products = await Product.find({
-      _id: { $in: cartItems.map((item) => item.productIds) },
-    });
-
-    // Log products and cartItems for debugging
-    console.log('Cart Items:', cartItems);
-    console.log('Products:', products);
-
-    let totalPrice = cartItems.reduce((acc, item) => {
-      const product = products.find(
-        (p) => p._id.toString() === item.productIds.toString() // Ensure both sides are strings
-      );
-
-      // Log the found product
-      console.log('Found Product:', product);
-
-      if (product) {
-        // Check if the price is a valid number
-        if (typeof product.price !== 'number') {
-          console.error(`Invalid price for product ID ${product._id}:`, product.price);
-          return acc; // Skip adding this product if the price is invalid
-        }
-        return acc + product.price * item.quantity; // Add the calculated price for this item
-      }
-      console.warn(`Product not found for ID: ${item.productIds}`);
-      return acc; // If product not found, just return the accumulator
-    }, 0);
-
-    // Ensure totalPrice is a valid number before further calculations
-    if (isNaN(totalPrice)) {
-      return res.status(400).json({ message: 'Invalid total price calculation.' });
-    }
-
-    const gstAmount = (18 / 100) * totalPrice;
-    const deliveryCharge = 50;
-    totalPrice += gstAmount + deliveryCharge;
-
-    const order = new Order({
       userId,
       addressId,
       cartItems,
@@ -116,23 +11,39 @@ const createOrder = async (req, res) => {
       name,
       email,
       phone,
-      paymentMode,  
-      status: 'Processing',
+      paymentMode,
+    } = req.body;
+
+    // Validate input
+    if (!userId || !addressId || !cartItems || !totalPrice || !name || !email || !phone || !paymentMode) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Create the order
+    const newOrder = new Order({
+      userId,
+      addressId,
+      cartItems,
+      totalPrice,
+      name,
+      email,
+      phone,
+      paymentMode,
     });
-    await order.save();
-    res.status(201).json({
-      message: 'Order placed successfully!',
-      totalPrice: totalPrice,
-      gstAmount: gstAmount,
-      deliveryCharge: deliveryCharge,
-      orderId: order._id
+
+    // Save the order to the database
+    const savedOrder = await newOrder.save();
+
+    // Return the saved order
+    return res.status(201).json({
+      message: 'Order created successfully',
+      order: savedOrder,
     });
   } catch (error) {
-    console.error('Error during checkout:', error);
-    res.status(500).json({ message: 'Failed to place the order.' });
+    console.error('Error creating order:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 const getOrdersByUser = async (req, res) => {
   try {
