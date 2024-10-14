@@ -1,4 +1,4 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 
@@ -6,27 +6,36 @@ const generateOtp = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-const otps = {}; 
+const otps = {};
 
 const sendOtp = async (phoneNumber, otp) => {
   console.log(`Sending OTP ${otp} to ${phoneNumber}`);
-
 };
 
 const registerUser = async (req, res) => {
   try {
-    const { phoneNumber } = req.body;
-    const existingUser = await User.findOne({ phoneNumber });
+    const { phoneNumber, username } = req.body;
+    const normalizedPhoneNumber = phoneNumber.trim();
+
+    const existingUser = await User.findOne({
+      $or: [{ phoneNumber: normalizedPhoneNumber }, { username }],
+    });
 
     if (existingUser) {
-      return res.status(400).json({ message: "User with this phone number already exists", existingUser });
+      if (existingUser.phoneNumber === normalizedPhoneNumber) {
+        return res
+          .status(400)
+          .json({ message: "User with this phone number already exists" });
+      } else if (existingUser.username === username) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
     }
-
     const otp = generateOtp();
-    await sendOtp(phoneNumber, otp);
-    otps[phoneNumber] = otp; 
+    await sendOtp(normalizedPhoneNumber, otp);
+    otps[normalizedPhoneNumber] = { otp, username };
+    console.log("Stored OTP:", otps[normalizedPhoneNumber]);
 
-    res.status(200).json({ message: "OTP sent successfully. Please verify.", otp});
+    res.status(200).json({ message: "OTP sent successfully. Please verify." });
   } catch (err) {
     console.error("Error during user registration:", err);
     res.status(500).json({ message: "Failed to register user" });
@@ -37,12 +46,24 @@ const verifyOtp = async (req, res) => {
   try {
     const { phoneNumber, otp } = req.body;
 
-    if (otps[phoneNumber] && otps[phoneNumber] === otp) {
-      const newUser = new User({ phoneNumber });
+    const normalizedPhoneNumber = phoneNumber.trim();
+    console.log("Received OTP:", otp);
+    console.log("Stored OTP:", otps[normalizedPhoneNumber]?.otp);
+    console.log("Stored Data:", otps[normalizedPhoneNumber]);
+    if (
+      otps[normalizedPhoneNumber] &&
+      otps[normalizedPhoneNumber].otp === otp.trim()
+    ) {
+      const username = otps[normalizedPhoneNumber].username;
+      const newUser = new User({
+        phoneNumber: normalizedPhoneNumber,
+        username,
+      });
       await newUser.save();
-      delete otps[phoneNumber]; 
-
-      return res.status(201).json({ message: "Verify Otp successfully",newUser });
+      delete otps[normalizedPhoneNumber];
+      return res
+        .status(201)
+        .json({ message: "OTP verified successfully", newUser });
     } else {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -58,23 +79,24 @@ const loginUser = async (req, res) => {
 
     // Check if the user exists in the database
     const existingUser = await User.findOne({ phoneNumber });
-    
+
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
     // Generate a new OTP
-    const otp = generateOtp(); 
+    const otp = generateOtp();
     await sendOtp(phoneNumber, otp);
     otps[phoneNumber] = otp; // Store the new OTP
 
-    res.status(200).json({ message: "OTP sent successfully. Please verify." ,otp});
+    res
+      .status(200)
+      .json({ message: "OTP sent successfully. Please verify.", otp });
   } catch (err) {
     console.error("Error during OTP login:", err);
     res.status(500).json({ message: "Failed to initiate OTP login" });
   }
 };
-
 
 const verifyOtpLogin = async (req, res) => {
   try {
@@ -83,7 +105,9 @@ const verifyOtpLogin = async (req, res) => {
     if (otps[phoneNumber] && otps[phoneNumber] === otp) {
       delete otps[phoneNumber];
 
-      res.status(200).json({ message: "Login successful", userId: phoneNumber });
+      res
+        .status(200)
+        .json({ message: "Login successful", userId: phoneNumber });
     } else {
       return res.status(400).json({ message: "Invalid OTP" });
     }
@@ -119,7 +143,9 @@ const updateUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ message: "User updated successfully", user: updatedUser });
+    res
+      .status(200)
+      .json({ message: "User updated successfully", user: updatedUser });
   } catch (error) {
     console.error("Error updating user:", error);
     res.status(500).json({ message: "Failed to update user" });
@@ -134,7 +160,9 @@ const deleteUser = async (req, res) => {
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json({ message: "User deleted successfully", user: deletedUser });
+    res
+      .status(200)
+      .json({ message: "User deleted successfully", user: deletedUser });
   } catch (error) {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "Failed to delete user" });
