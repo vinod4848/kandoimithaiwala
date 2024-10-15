@@ -50,7 +50,7 @@ const getOrdersByUser = async (req, res) => {
     const { userId } = req.params;
     const orders = await Order.find({ userId })
       .populate({
-        path: "cartItems.productIds",
+        path: "cartItems.productId",
         model: "Product",
       })
       .populate("addressId");
