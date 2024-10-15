@@ -87,15 +87,54 @@ const addItemToCart = async (req, res) => {
 // };
 
 
+// const getCart = async (req, res) => {
+//   const { userId } = req.params;
+
+//   try {
+
+//     const cart = await Cart.findOne({ userId }).populate({
+//       path: 'items.productId.image ',
+//       model: 'Product',
+//       select: 'price name image', 
+//     });
+
+//     if (!cart) {
+//       return res.status(404).json({ message: "Cart not found" });
+//     }
+
+//     // Calculate total price
+//     let totalPrice = 0;
+//     cart.items = cart.items.map((item) => {
+//       if (item.productId && item.productId.price !== undefined) {
+//         const itemTotalPrice = item.productId.price * item.quantity;
+//         item.totalPrice = itemTotalPrice; 
+//         totalPrice += itemTotalPrice;
+//       } else {
+//         console.warn(`Product ID: ${item.productId} does not have a valid price.`);
+//       }
+//       return item;
+//     });
+
+
+//     await cart.save();
+//     res.status(200).json({
+//       cart,
+//       totalPrice, 
+//     });
+//   } catch (error) {
+//     console.error("Error fetching cart:", error);
+//     res.status(500).json({ message: "Server error", error: error.message });
+//   }
+// };
 const getCart = async (req, res) => {
   const { userId } = req.params;
 
   try {
-
+    // Populate the productId field with its price, name, and image
     const cart = await Cart.findOne({ userId }).populate({
-      path: 'items.productId.image ',
+      path: 'items.productId', // Populate the productId field
       model: 'Product',
-      select: 'price name image', 
+      select: 'price name image imageUrl', // Select the fields you need from Product
     });
 
     if (!cart) {
@@ -114,7 +153,6 @@ const getCart = async (req, res) => {
       }
       return item;
     });
-
 
     await cart.save();
     res.status(200).json({
