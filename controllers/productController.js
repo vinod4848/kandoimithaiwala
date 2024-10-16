@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const ProductCategory = require("../models/productCategory");
 const { uploadImage } = require("../helper/uploadImage");
 
 const createProduct = async (req, res) => {
@@ -108,6 +109,21 @@ const searchProducts = async (req, res) => {
   }
 };
 
+const getProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params; 
+    const products = await Product.find({ productCategoryId: categoryId }).populate("productCategoryId");
+
+    if (!products.length) {
+      return res.status(404).json({ message: "No products found for this category" });
+    }
+
+    res.status(200).json(products);
+  } catch (err) {
+    console.error("Error fetching products by category:", err);
+    res.status(500).json({ message: "Failed to fetch products by category" });
+  }
+};
 const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().populate("productCategoryId");
@@ -124,4 +140,5 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  getProductsByCategory
 };

@@ -10,6 +10,7 @@ const {
     updateProduct,
     deleteProduct,
     searchProducts,
+    getProductsByCategory,
 } = require("../controllers/productController");
 
 router.post("/createProduct",upload.single("image"), createProduct);
@@ -18,6 +19,7 @@ router.get("/getAllProducts", getAllProducts);
 
 
 router.get("/getProductById/:id", getProductById);
+router.get('/category/:categoryId',getProductsByCategory);
 
 
 
