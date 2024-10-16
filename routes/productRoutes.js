@@ -19,6 +19,7 @@ router.get("/getAllProducts", getAllProducts);
 
 
 router.get("/getProductById/:id", getProductById);
+
 router.get('/category/:categoryId',getProductsByCategory);
 
 
