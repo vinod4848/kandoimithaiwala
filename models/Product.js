@@ -13,7 +13,7 @@ const productSchema = new mongoose.Schema({
     quantity: { type: String, required: true }, 
     price: { type: Number, required: true } 
   }],
-  officePrice: {
+  offerPrice: {
     type: Number,
   },
   image: {
