@@ -133,6 +133,33 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch products" });
   }
 };
+const deleteProductVariantById = async (req, res) => {
+  const { productId, variantId } = req.params;
+
+  try {
+    // Find the product and remove the variant with the specified variant ID
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      {
+        $pull: { variants: { _id: variantId } }
+      },
+      { new: true } // Return the updated product
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product or variant not found' });
+    }
+
+    res.status(200).json({
+      message: 'Variant deleted successfully',
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error('Error deleting variant:', error);
+    res.status(500).json({ message: 'Error deleting variant', error });
+  }
+};
+
 module.exports = {
   getAllProducts,
   searchProducts,
@@ -140,5 +167,6 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
-  getProductsByCategory
+  getProductsByCategory,
+  deleteProductVariantById
 };
