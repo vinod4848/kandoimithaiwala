@@ -21,26 +21,58 @@ const createProduct = async (req, res) => {
   }
 };
 
+
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, imageUrl, quantity } = req.body;
+    const { name, description, price, quantity } = req.body;
+    let image = req.body.image; // Default to existing image URL
+
+    // Check if a new image file is uploaded
+    if (req.file) {
+      // Upload the new image (use a cloud service like AWS S3, or save locally)
+      const uploadedImage = await uploadImage(req.file); // uploadImage should return the image URL
+      image = uploadedImage; // Update with the new image URL
+    }
+
+    // Update product with the new or existing image
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
-      { name, description, price, imageUrl, quantity },
-      { new: true }
+      { name, description, price, image, quantity },
+      { new: true } // Return the updated document
     );
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.status(200).json({ message: "Product updated successfully" });
+    res.status(200).json({ message: "Product updated successfully", updatedProduct });
   } catch (err) {
     console.error("Error updating product:", err);
     res.status(500).json({ message: "Failed to update product" });
   }
 };
+
+// const updateProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { name, description, price, image, quantity } = req.body;
+//     const updatedProduct = await Product.findByIdAndUpdate(
+//       id,
+//       { name, description, price, image, quantity },
+//       { new: true }
+//     );
+
+//     if (!updatedProduct) {
+//       return res.status(404).json({ message: "Product not found" });
+//     }
+
+//     res.status(200).json({ message: "Product updated successfully" ,updatedProduct});
+//   } catch (err) {
+//     console.error("Error updating product:", err);
+//     res.status(500).json({ message: "Failed to update product" });
+//   }
+// };
 
 const deleteProduct = async (req, res) => {
   try {
