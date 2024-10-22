@@ -6,8 +6,10 @@ const createProduct = async (req, res) => {
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ success: false, message: "Image file is required" });
-    } 
+      return res
+        .status(400)
+        .json({ success: false, message: "Image file is required" });
+    }
     const image = await uploadImage(file);
 
     const product = new Product({ ...req.body, image });
@@ -34,7 +36,9 @@ const updateProduct = async (req, res) => {
     }
 
     // Find the product by ID and update its details
-    const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true }).populate("productCategoryId");
+    const updatedProduct = await Product.findByIdAndUpdate(id, updates, {
+      new: true,
+    }).populate("productCategoryId");
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Product not found" });
@@ -43,7 +47,13 @@ const updateProduct = async (req, res) => {
     res.status(200).json({ success: true, data: updatedProduct });
   } catch (error) {
     console.error("Error updating product:", error);
-    res.status(500).json({ success: false, message: "Failed to update product", error: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to update product",
+        error: error.message,
+      });
   }
 };
 
@@ -82,7 +92,8 @@ const getProductById = async (req, res) => {
 
 const searchProducts = async (req, res) => {
   try {
-    const { searchQuery, minPrice, maxPrice, category, sortBy, sortOrder } = req.query;
+    const { searchQuery, minPrice, maxPrice, category, sortBy, sortOrder } =
+      req.query;
     let filters = {};
 
     if (searchQuery) {
@@ -103,7 +114,7 @@ const searchProducts = async (req, res) => {
 
     let sortOptions = {};
     if (sortBy) {
-      sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
     }
 
     const products = await Product.find(filters).sort(sortOptions);
@@ -116,11 +127,15 @@ const searchProducts = async (req, res) => {
 
 const getProductsByCategory = async (req, res) => {
   try {
-    const { categoryId } = req.params; 
-    const products = await Product.find({ productCategoryId: categoryId }).populate("productCategoryId");
+    const { categoryId } = req.params;
+    const products = await Product.find({
+      productCategoryId: categoryId,
+    }).populate("productCategoryId");
 
     if (!products.length) {
-      return res.status(404).json({ message: "No products found for this category" });
+      return res
+        .status(404)
+        .json({ message: "No products found for this category" });
     }
 
     res.status(200).json(products);
@@ -146,22 +161,52 @@ const deleteProductVariantById = async (req, res) => {
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
       {
-        $pull: { variants: { _id: variantId } }
+        $pull: { variants: { _id: variantId } },
       },
       { new: true } // Return the updated product
     );
 
     if (!updatedProduct) {
-      return res.status(404).json({ message: 'Product or variant not found' });
+      return res.status(404).json({ message: "Product or variant not found" });
     }
 
     res.status(200).json({
-      message: 'Variant deleted successfully',
+      message: "Variant deleted successfully",
       product: updatedProduct,
     });
   } catch (error) {
-    console.error('Error deleting variant:', error);
-    res.status(500).json({ message: 'Error deleting variant', error });
+    console.error("Error deleting variant:", error);
+    res.status(500).json({ message: "Error deleting variant", error });
+  }
+};
+
+const updateProductVariantById = async (req, res) => {
+  const { productId, variantId } = req.params;
+  const variantUpdates = req.body; // The updates for the variant
+
+  try {
+    // Find the product by ID and then update the specific variant using $set
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: productId, "variants._id": variantId },
+      {
+        $set: {
+          "variants.$": variantUpdates, // Update the specific variant with the new values
+        },
+      },
+      { new: true } // Return the updated product
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product or variant not found" });
+    }
+
+    res.status(200).json({
+      message: "Variant updated successfully",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Error updating variant:", error);
+    res.status(500).json({ message: "Error updating variant", error });
   }
 };
 
@@ -173,5 +218,6 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductsByCategory,
-  deleteProductVariantById
+  deleteProductVariantById,
+  updateProductVariantById,
 };

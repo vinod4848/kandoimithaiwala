@@ -16,6 +16,8 @@ router.get('/category/:categoryId',productController.getProductsByCategory);
 
 router.delete('/product/:productId/variant/:variantId', productController.deleteProductVariantById);
 
+router.put('/updateProductVariant/:productId/:variantId', productController.updateProductVariantById);
+
 router.get("/search", productController.searchProducts);
 
 
