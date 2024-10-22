@@ -180,20 +180,48 @@ const deleteProductVariantById = async (req, res) => {
   }
 };
 
+// const updateProductVariantById = async (req, res) => {
+//   const { productId, variantId } = req.params;
+//   const variantUpdates = req.body; 
+
+//   try {
+//     // Find the product by ID and then update the specific variant using $set
+//     const updatedProduct = await Product.findOneAndUpdate(
+//       { _id: productId, "variants._id": variantId },
+//       {
+//         $set: {
+//           "variants.$": variantUpdates, // Update the specific variant with the new values
+//         },
+//       },
+//       // { new: true } // Return the updated product
+//     );
+
+//     if (!updatedProduct) {
+//       return res.status(404).json({ message: "Product or variant not found" });
+//     }
+
+//     res.status(200).json({
+//       message: "Variant updated successfully",
+//       product: updatedProduct,
+//     });
+//   } catch (error) {
+//     console.error("Error updating variant:", error);
+//     res.status(500).json({ message: "Error updating variant", error });
+//   }
+// };
 const updateProductVariantById = async (req, res) => {
   const { productId, variantId } = req.params;
-  const variantUpdates = req.body; // The updates for the variant
+  const variantUpdates = req.body; // New data to update the variant
 
   try {
-    // Find the product by ID and then update the specific variant using $set
+    // Find the product by ID and update the specific variant
     const updatedProduct = await Product.findOneAndUpdate(
       { _id: productId, "variants._id": variantId },
       {
         $set: {
-          "variants.$": variantUpdates, // Update the specific variant with the new values
+          "variants.$": variantUpdates, // Update the specific variant data
         },
       },
-      { new: true } // Return the updated product
     );
 
     if (!updatedProduct) {
