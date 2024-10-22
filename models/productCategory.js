@@ -6,6 +6,9 @@ const productCategorySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  image: {
+    type: String,
+  },
   date: { type: Date, default: Date.now, required: true },
 });
 

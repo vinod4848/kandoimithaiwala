@@ -19,7 +19,7 @@ router.delete('/product/:productId/variant/:variantId', productController.delete
 router.get("/search", productController.searchProducts);
 
 
-router.put("/updateProduct/:id", productController.updateProduct);
+router.put("/updateProduct/:id", upload.single("image"), productController.updateProduct);
 
 
 router.delete("/deleteProduct/:id", productController.deleteProduct);

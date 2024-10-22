@@ -1,5 +1,4 @@
 const Product = require("../models/Product");
-const ProductCategory = require("../models/productCategory");
 const { uploadImage } = require("../helper/uploadImage");
 
 const createProduct = async (req, res) => {
@@ -21,58 +20,32 @@ const createProduct = async (req, res) => {
   }
 };
 
-
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, quantity } = req.body;
-    let image = req.body.image; // Default to existing image URL
+    const updates = { ...req.body }; // Collect the product updates from the request body
+    const file = req.file; // Check if an image file is uploaded
 
-    // Check if a new image file is uploaded
-    if (req.file) {
-      // Upload the new image (use a cloud service like AWS S3, or save locally)
-      const uploadedImage = await uploadImage(req.file); // uploadImage should return the image URL
-      image = uploadedImage; // Update with the new image URL
+    // If an image file is provided, upload and update the image
+    if (file) {
+      console.log("Image file found, uploading...");
+      const imageUrl = await uploadImage(file); // Upload the image and get the URL
+      updates.image = imageUrl; // Add the image URL to the update object
     }
 
-    // Update product with the new or existing image
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { name, description, price, image, quantity },
-      { new: true } // Return the updated document
-    );
+    // Find the product by ID and update its details
+    const updatedProduct = await Product.findByIdAndUpdate(id, updates, { new: true }).populate("productCategoryId");
 
     if (!updatedProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.status(200).json({ message: "Product updated successfully", updatedProduct });
-  } catch (err) {
-    console.error("Error updating product:", err);
-    res.status(500).json({ message: "Failed to update product" });
+    res.status(200).json({ success: true, data: updatedProduct });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ success: false, message: "Failed to update product", error: error.message });
   }
 };
-
-// const updateProduct = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { name, description, price, image, quantity } = req.body;
-//     const updatedProduct = await Product.findByIdAndUpdate(
-//       id,
-//       { name, description, price, image, quantity },
-//       { new: true }
-//     );
-
-//     if (!updatedProduct) {
-//       return res.status(404).json({ message: "Product not found" });
-//     }
-
-//     res.status(200).json({ message: "Product updated successfully" ,updatedProduct});
-//   } catch (err) {
-//     console.error("Error updating product:", err);
-//     res.status(500).json({ message: "Failed to update product" });
-//   }
-// };
 
 const deleteProduct = async (req, res) => {
   try {
