@@ -9,6 +9,7 @@ router.post("/createProduct", upload.array("images"), productController.createPr
 
 router.get("/getAllProducts", productController.getAllProducts);
 
+router.delete("/products/:productId/:imageIndex",productController.deleteProductImageByIndex);
 
 router.get("/getProductById/:id", productController.getProductById);
 

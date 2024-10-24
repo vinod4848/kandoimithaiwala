@@ -1,5 +1,5 @@
 const AWS = require("aws-sdk");
-
+const s3 = new AWS.S3();
 const uploadImage = async (file) => {
   const bucketName = process.env.AWS_BUCKET_NAME;
   const region = process.env.AWS_REGION;
@@ -27,4 +27,20 @@ const uploadImage = async (file) => {
   }
 };
 
-module.exports = { uploadImage };
+
+const deleteImage = async (imageUrl) => {
+  try {
+    const imageKey = imageUrl.split('/').pop(); 
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: imageKey,
+    };
+
+    await s3.deleteObject(params).promise();
+    console.log("Image deleted from storage:", imageKey);
+  } catch (error) {
+    console.error("Error deleting image from storage:", error);
+  }
+};
+
+module.exports = { uploadImage,deleteImage };

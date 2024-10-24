@@ -1,5 +1,5 @@
 const Product = require("../models/Product");
-const { uploadImage } = require("../helper/uploadImage");
+const { uploadImage ,deleteImage} = require("../helper/uploadImage");
 
 const createProduct = async (req, res) => {
   try {
@@ -182,35 +182,6 @@ const deleteProductVariantById = async (req, res) => {
   }
 };
 
-// const updateProductVariantById = async (req, res) => {
-//   const { productId, variantId } = req.params;
-//   const variantUpdates = req.body; 
-
-//   try {
-//     // Find the product by ID and then update the specific variant using $set
-//     const updatedProduct = await Product.findOneAndUpdate(
-//       { _id: productId, "variants._id": variantId },
-//       {
-//         $set: {
-//           "variants.$": variantUpdates, // Update the specific variant with the new values
-//         },
-//       },
-//       // { new: true } // Return the updated product
-//     );
-
-//     if (!updatedProduct) {
-//       return res.status(404).json({ message: "Product or variant not found" });
-//     }
-
-//     res.status(200).json({
-//       message: "Variant updated successfully",
-//       product: updatedProduct,
-//     });
-//   } catch (error) {
-//     console.error("Error updating variant:", error);
-//     res.status(500).json({ message: "Error updating variant", error });
-//   }
-// };
 const updateProductVariantById = async (req, res) => {
   const { productId, variantId } = req.params;
   const variantUpdates = req.body; // New data to update the variant
@@ -239,6 +210,44 @@ const updateProductVariantById = async (req, res) => {
     res.status(500).json({ message: "Error updating variant", error });
   }
 };
+const deleteProductImageByIndex = async (req, res) => {
+  const { productId, imageIndex } = req.params; // Get product ID and image index from params
+
+  try {
+    // Find the product by ID
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Check if the image index is valid
+    if (imageIndex < 0 || imageIndex >= product.images.length) {
+      return res.status(400).json({ message: "Invalid image index" });
+    }
+
+    // Get the URL of the image to delete
+    const imageUrl = product.images[imageIndex];
+
+    // Remove the image from the array
+    product.images.splice(imageIndex, 1);
+
+    // Update the product in the database
+    await product.save();
+
+    // Optionally, delete the image from storage
+    await deleteImage(imageUrl); // Call a helper function to delete the image from storage
+
+    res.status(200).json({
+      success: true,
+      message: "Image deleted successfully",
+      product,
+    });
+  } catch (error) {
+    console.error("Error deleting product image:", error);
+    res.status(500).json({ message: "Error deleting image", error });
+  }
+};
 
 module.exports = {
   getAllProducts,
@@ -250,4 +259,5 @@ module.exports = {
   getProductsByCategory,
   deleteProductVariantById,
   updateProductVariantById,
+  deleteProductImageByIndex,
 };
