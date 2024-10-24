@@ -5,7 +5,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 const productController= require("../controllers/productController");
 
-router.post("/createProduct",upload.single("image"),productController. createProduct);
+router.post("/createProduct", upload.array("images"), productController.createProduct);
 
 router.get("/getAllProducts", productController.getAllProducts);
 

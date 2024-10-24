@@ -3,16 +3,18 @@ const { uploadImage } = require("../helper/uploadImage");
 
 const createProduct = async (req, res) => {
   try {
-    const file = req.file;
+    const files = req.files;
 
-    if (!file) {
+    if (!files || files.length === 0) {
       return res
         .status(400)
-        .json({ success: false, message: "Image file is required" });
+        .json({ success: false, message: "Image files are required" });
     }
-    const image = await uploadImage(file);
 
-    const product = new Product({ ...req.body, image });
+    // Map through the files and upload each one
+    const imageUrls = await Promise.all(files.map(file => uploadImage(file)));
+
+    const product = new Product({ ...req.body, images: imageUrls });
     await product.save();
 
     res.status(201).json({ success: true, data: product });

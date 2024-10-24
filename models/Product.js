@@ -16,9 +16,10 @@ const productSchema = new mongoose.Schema({
   offerPrice: {
     type: Number,
   },
-  image: {
-    type: String,
+  images: {
+    type: [String],  
   },
+  
   productCategoryId: [
     { type: mongoose.Schema.Types.ObjectId, ref: "ProductCategory" }
   ],
