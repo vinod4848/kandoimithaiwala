@@ -134,7 +134,7 @@ const getCart = async (req, res) => {
     const cart = await Cart.findOne({ userId }).populate({
       path: 'items.productId', // Populate the productId field
       model: 'Product',
-      select: 'price name image imageUrl', // Select the fields you need from Product
+      select: 'price name images imageUrl', // Select the fields you need from Product
     });
 
     if (!cart) {
