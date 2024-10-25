@@ -22,7 +22,7 @@ router.put('/updateProductVariant/:productId/:variantId', productController.upda
 router.get("/search", productController.searchProducts);
 
 
-router.put("/updateProduct/:id", upload.single("image"), productController.updateProduct);
+router.put("/updateProduct/:id", upload.array("images"), productController.updateProduct);
 
 
 router.delete("/deleteProduct/:id", productController.deleteProduct);

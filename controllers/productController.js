@@ -28,13 +28,13 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = { ...req.body }; // Collect the product updates from the request body
-    const file = req.file; // Check if an image file is uploaded
+    const files = req.files; // Check if multiple image files are uploaded
 
-    // If an image file is provided, upload and update the image
-    if (file) {
-      console.log("Image file found, uploading...");
-      const imageUrl = await uploadImage(file); // Upload the image and get the URL
-      updates.image = imageUrl; // Add the image URL to the update object
+    // If image files are provided, upload each and gather their URLs
+    if (files && files.length > 0) {
+      console.log("Image files found, uploading...");
+      const imageUrls = await Promise.all(files.map(file => uploadImage(file))); // Upload each file and get the URLs
+      updates.images = imageUrls; // Add the image URLs to the update object
     }
 
     // Find the product by ID and update its details
@@ -49,13 +49,11 @@ const updateProduct = async (req, res) => {
     res.status(200).json({ success: true, data: updatedProduct });
   } catch (error) {
     console.error("Error updating product:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to update product",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to update product",
+      error: error.message,
+    });
   }
 };
 
@@ -146,6 +144,7 @@ const getProductsByCategory = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch products by category" });
   }
 };
+
 const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().populate("productCategoryId");
@@ -155,6 +154,7 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch products" });
   }
 };
+
 const deleteProductVariantById = async (req, res) => {
   const { productId, variantId } = req.params;
 
@@ -210,6 +210,7 @@ const updateProductVariantById = async (req, res) => {
     res.status(500).json({ message: "Error updating variant", error });
   }
 };
+
 const deleteProductImageByIndex = async (req, res) => {
   const { productId, imageIndex } = req.params; // Get product ID and image index from params
 
